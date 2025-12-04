@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airspace Information System</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone para transformar JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Componentes de ícones Lucide simplificados
+        const ChevronDown = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        );
+
+        const ChevronRight = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        );
+
+        const Plane = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path>
+            </svg>
+        );
+
+        const Radio = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="2"></circle>
+                <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+            </svg>
+        );
+
+        const AlertTriangle = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        );
+
+        const Navigation = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+            </svg>
+        );
+
+        const Radar = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+                <line x1="12" y1="12" x2="17" y2="7"></line>
+            </svg>
+        );
+
+        const Search = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+        );
+
+        const Edit2 = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+            </svg>
+        );
+
+        const Save = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+        );
+
+        const X = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        );
+
+        const Plus = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        );
+
+        const Trash2 = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        );
+
+        const FileText = ({ className, size }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+        );
+
+        const AirspaceInfoApp = () => {
+          const [expandedAirspaces, setExpandedAirspaces] = useState({});
+          const [expandedCategories, setExpandedCategories] = useState({});
+          const [searchTerm, setSearchTerm] = useState('');
+          const [editMode, setEditMode] = useState(false);
+          const [editingAirspace, setEditingAirspace] = useState(null);
+          const [showAddModal, setShowAddModal] = useState(false);
+          const [showDeleteModal, setShowDeleteModal] = useState(false);
+          const [airspaceToDelete, setAirspaceToDelete] = useState(null);
+
+          // Helper para obter o componente de ícone pelo nome
+          const getIconComponent = (iconName) => {
+            const icons = {
+              'AlertTriangle': AlertTriangle,
+              'Navigation': Navigation,
+              'Radar': Radar,
+              'FileText': FileText
+            };
+            return icons[iconName] || AlertTriangle;
+          };
+
+          // Dados de exemplo dos espaços aéreos
+          const [airspaceData, setAirspaceData] = useState([
+            {
+              id: 'doc4444-contingency',
+              name: 'DOC4444 Contingency Procedures',
+              region: 'ICAO Standard Procedures',
+              image: 'oceanic_contingencies.png',
+              lastModified: new Date().toISOString(),
+              categories: [
+                {
+                  id: 'weather-deviation',
+                  name: 'Weather Deviation Procedure',
+                  iconName: 'AlertTriangle',
+                  color: 'text-amber-600',
+                  info: {
+                    withCommunication: [
+                      'Try to get revised ATC clearance',
+                      'If no ATC clearance, turn at least 30°',
+                      'Maintain FL or minimize descent',
+                      'Use ACAS and visual watch',
+                      'Lights on!',
+                      'Talk! 121.5, 123.45, 7700, SATCOM'
+                    ],
+                    withoutCommunication: [
+                      'SLOP up to 2NM lateral offset',
+                      'When returning to track, be at assigned flight level when 5NM away',
+                      'If less than 5NM, remain at flight level assigned by ATC',
+                      'If 5NM or more: SANDI - South of track Ascend, North of track Descend',
+                      'Up/Down by 300ft'
+                    ]
+                  }
+                },
+                {
+                  id: 'contingencies',
+                  name: 'Contingency Procedures',
+                  iconName: 'AlertTriangle',
+                  color: 'text-red-600',
+                  info: {
+                    ableMaintainLevel: [
+                      'Establish 5NM offset track',
+                      'If no ATC clearance, turn at least 30°',
+                      'Maintain current flight level',
+                      'Visual watch and ACAS monitoring',
+                      'Lights on',
+                      'Talk! 121.5, 123.45, 7700, SATCOM',
+                      'Proceed until new ATC clearance received'
+                    ],
+                    notAbleMaintainLevel: [
+                      'Option 1: Stay at current flight level, vertical offset by 500ft or 1000ft if above FL410',
+                      'Option 2: Descend to below FL290',
+                      'Descend to below FL290',
+                      'Fly at 500ft vertical offset from normal levels',
+                      'Proceed until new ATC clearance received',
+                      'Squawk 7700, all lights on',
+                      'Talk! 121.5, 123.45, SATCOM'
+                    ]
+                  }
+                },
+                {
+                  id: 'notes',
+                  name: 'Notes',
+                  iconName: 'FileText',
+                  color: 'text-purple-600',
+                  info: {
+                    notes: [
+                      'Add your notes here'
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              id: 'oceanic-atlantic',
+              name: 'Oceanic Atlantic (EGGX)',
+              region: 'North Atlantic',
+              lastModified: new Date().toISOString(),
+              categories: [
+                {
+                  id: 'weather-deviation',
+                  name: 'Weather Deviation Procedure',
+                  iconName: 'AlertTriangle',
+                  color: 'text-amber-600',
+                  info: {
+                    withCommunication: [
+                      'Notify ATC immediately of deviation intent',
+                      'Request clearance before deviating',
+                      'Maintain altitude unless approved otherwise',
+                      'Report position updates every 10-15 minutes',
+                      'Return to cleared route as soon as possible'
+                    ],
+                    withoutCommunication: [
+                      'Offset 5 NM right of centerline (NH) or left (SH)',
+                      'Climb or descend 500 ft if unable to offset',
+                      'Turn on all exterior lights',
+                      'Broadcast position and intentions on 121.5 MHz',
+                      'Monitor guard frequency continuously',
+                      'Establish communication ASAP'
+                    ]
+                  }
+                },
+                {
+                  id: 'contingencies',
+                  name: 'Contingency Procedures',
+                  iconName: 'AlertTriangle',
+                  color: 'text-red-600',
+                  info: {
+                    ableMaintainLevel: [
+                      'Offset 5 NM right of track (or as regional procedures)',
+                      'If unable to offset right, offset left',
+                      'Watch for conflicting traffic',
+                      'Transmit position reports on 121.5 MHz',
+                      'Leave emergency transponder code (7700) on',
+                      'Turn on all exterior lights'
+                    ],
+                    notAbleMaintainLevel: [
+                      'If above assigned level: descend 500 ft',
+                      'If below assigned level: climb 500 ft',
+                      'Offset track as per able to maintain level procedure',
+                      'Squawk 7700 and turn on all lights',
+                      'Broadcast intentions and position on guard',
+                      'Establish communications with ATC immediately'
+                    ]
+                  }
+                },
+                {
+                  id: 'rnp-required',
+                  name: 'RNP Required',
+                  iconName: 'Navigation',
+                  color: 'text-blue-600',
+                  info: {
+                    requirements: [
+                      'RNP 10 required for North Atlantic operations',
+                      'RNP 4 required for certain high-density routes',
+                      'Aircraft must be approved for RNP operations',
+                      'Continuous monitoring of navigation accuracy',
+                      'Dual GNSS receivers required',
+                      'Flight plan must indicate RNP capability'
+                    ],
+                    procedures: [
+                      'Verify RNP status before oceanic entry',
+                      'Monitor FMS navigation accuracy continuously',
+                      'Report any degradation to ATC immediately',
+                      'Revert to conventional navigation if RNP lost',
+                      'Ensure proper database currency'
+                    ]
+                  }
+                },
+                {
+                  id: 'ads-b',
+                  name: 'ADS-B Requirements',
+                  iconName: 'Radar',
+                  color: 'text-green-600',
+                  info: {
+                    requirements: [
+                      'ADS-B Out required for flights above FL290',
+                      'Extended squitter (1090 ES) or UAT compliant',
+                      'Position source accuracy must meet DO-260B/DO-282B',
+                      'Transmit aircraft identification and position',
+                      'Continuous operation during entire flight',
+                      'Equipment code must be in flight plan'
+                    ],
+                    specifications: [
+                      'Update rate: minimum 2 per second',
+                      'Position accuracy: <0.05 NM (95%)',
+                      'Velocity accuracy: <10 knots (95%)',
+                      'Geometric altitude accuracy required',
+                      'NIC (Navigation Integrity Category) ≥ 7'
+                    ]
+                  }
+                },
+                {
+                  id: 'notes',
+                  name: 'Notes',
+                  iconName: 'FileText',
+                  color: 'text-purple-600',
+                  info: {
+                    notes: [
+                      'Add your notes here'
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              id: 'pacific-ocean',
+              name: 'Pacific Ocean (KZAK)',
+              region: 'Central Pacific',
+              lastModified: new Date().toISOString(),
+              categories: [
+                {
+                  id: 'weather-deviation',
+                  name: 'Weather Deviation Procedure',
+                  iconName: 'AlertTriangle',
+                  color: 'text-amber-600',
+                  info: {
+                    withCommunication: [
+                      'Request deviation clearance from ATC',
+                      'Specify direction and extent of deviation',
+                      'Maintain assigned altitude unless cleared otherwise',
+                      'Report when returning to cleared route',
+                      'Use HF and CPDLC as available'
+                    ],
+                    withoutCommunication: [
+                      'Turn 45° right (day) or 90° right (night)',
+                      'Fly parallel to track until clear',
+                      'Return to track at 45° angle',
+                      'Broadcast position on 121.5 and oceanic frequency',
+                      'Climb or descend 500 ft if necessary',
+                      'Squawk 7700 if emergency'
+                    ]
+                  }
+                },
+                {
+                  id: 'contingencies',
+                  name: 'Contingency Procedures',
+                  iconName: 'AlertTriangle',
+                  color: 'text-red-600',
+                  info: {
+                    ableMaintainLevel: [
+                      'Offset 5 NM right of assigned track',
+                      'If unable right, then offset 5 NM left',
+                      'Maintain assigned altitude',
+                      'Turn on exterior lights and squawk 7700',
+                      'Broadcast position every 15 minutes on 121.5',
+                      'Attempt to establish ATC communication'
+                    ],
+                    notAbleMaintainLevel: [
+                      'Initially minimize rate of descent/climb',
+                      'Offset from track while changing level',
+                      'Descend/climb as required by emergency',
+                      'Transmit MSG on all available frequencies',
+                      'Set transponder to 7700',
+                      'Notify ATC of actions taken when able'
+                    ]
+                  }
+                },
+                {
+                  id: 'rnp-required',
+                  name: 'RNP Required',
+                  iconName: 'Navigation',
+                  color: 'text-blue-600',
+                  info: {
+                    requirements: [
+                      'RNP 10 mandatory for Pacific oceanic airspace',
+                      'RNP 4 for certain published routes',
+                      'Dual independent GNSS required',
+                      'Automatic position updating via FMS',
+                      'Cross-track monitoring system required',
+                      'MEL restrictions for RNP operations apply'
+                    ],
+                    procedures: [
+                      'Confirm RNP capability in flight plan (R)',
+                      'Pre-flight verification of nav database',
+                      'Monitor cross-track error continuously',
+                      'Maximum allowable deviation: ±5 NM (RNP 10)',
+                      'Report navigation system failures immediately',
+                      'Have contingency procedures ready'
+                    ]
+                  }
+                },
+                {
+                  id: 'ads-b',
+                  name: 'ADS-B Requirements',
+                  iconName: 'Radar',
+                  color: 'text-green-600',
+                  info: {
+                    requirements: [
+                      'ADS-B Out mandatory in Pacific oceanic airspace',
+                      'Required for all altitudes in most FIRs',
+                      'Position integrity level sufficient for oceanic',
+                      'Must broadcast ICAO 24-bit address',
+                      'Emitter category accurately set',
+                      'Flight ID must match flight plan'
+                    ],
+                    specifications: [
+                      'Transmission rate: 0.4 to 0.6 seconds',
+                      'Horizontal accuracy: NACp ≥ 8',
+                      'Vertical accuracy: NACv included',
+                      'System latency: <2.0 seconds',
+                      'SIL (Surveillance Integrity Level) ≥ 2',
+                      'Continuous monitoring required'
+                    ]
+                  }
+                },
+                {
+                  id: 'notes',
+                  name: 'Notes',
+                  iconName: 'FileText',
+                  color: 'text-purple-600',
+                  info: {
+                    notes: [
+                      'Add your notes here'
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              id: 'south-atlantic',
+              name: 'South Atlantic (SBAO)',
+              region: 'South American Atlantic',
+              lastModified: new Date().toISOString(),
+              categories: [
+                {
+                  id: 'weather-deviation',
+                  name: 'Weather Deviation Procedure',
+                  iconName: 'AlertTriangle',
+                  color: 'text-amber-600',
+                  info: {
+                    withCommunication: [
+                      'Contact ATC on assigned frequency',
+                      'Request deviation with direction and distance',
+                      'Obtain clearance before deviating',
+                      'Maintain level unless otherwise cleared',
+                      'Report clear of weather and returning to track',
+                      'Use CPDLC where available'
+                    ],
+                    withoutCommunication: [
+                      'Offset 10 NM right of centerline initially',
+                      'If unable right, offset left of centerline',
+                      'Broadcast intentions on 121.5 MHz',
+                      'Turn on strobe lights and landing lights',
+                      'Attempt contact on all assigned frequencies',
+                      'Monitor 121.5 MHz continuously'
+                    ]
+                  }
+                },
+                {
+                  id: 'contingencies',
+                  name: 'Contingency Procedures',
+                  iconName: 'AlertTriangle',
+                  color: 'text-red-600',
+                  info: {
+                    ableMaintainLevel: [
+                      'Turn right 45° if possible',
+                      'Offset from track by 5 NM minimum',
+                      'Maintain assigned flight level',
+                      'Squawk 7700 and illuminate aircraft',
+                      'Make position broadcasts every 15 min',
+                      'Try all available comm methods'
+                    ],
+                    notAbleMaintainLevel: [
+                      'If descending: turn right and descend',
+                      'If climbing: turn right and climb',
+                      'Offset while changing altitude',
+                      'Transmit Mayday on 121.5 MHz',
+                      'Squawk 7700 throughout',
+                      'Establish communication ASAP'
+                    ]
+                  }
+                },
+                {
+                  id: 'rnp-required',
+                  name: 'RNP Required',
+                  iconName: 'Navigation',
+                  color: 'text-blue-600',
+                  info: {
+                    requirements: [
+                      'RNP 10 or RNP 4 depending on route',
+                      'Must have operational GNSS with RAIM',
+                      'Long-range navigation system required',
+                      'Automatic cross-track alert system',
+                      'Position accuracy monitoring mandatory',
+                      'Documented RNP capability required'
+                    ],
+                    procedures: [
+                      'Include RNP designation in remarks',
+                      'Verify navigation system accuracy before entry',
+                      'Monitor CDU/FMS cross-track continuously',
+                      'Maximum cross-track: half RNP value',
+                      'Notify ATC if RNP capability lost',
+                      'Revert to procedural separation if needed'
+                    ]
+                  }
+                },
+                {
+                  id: 'ads-b',
+                  name: 'ADS-B Requirements',
+                  iconName: 'Radar',
+                  color: 'text-green-600',
+                  info: {
+                    requirements: [
+                      'ADS-B Out required per Brazilian ANAC regulations',
+                      'Mandatory for IFR operations in FIR Atlântico',
+                      'Equipment must meet ICAO standards',
+                      'Position source from certified GPS',
+                      'Barometric altitude encoding required',
+                      'SPI (Ident) pulse capability needed'
+                    ],
+                    specifications: [
+                      'DO-260B Class A1 or higher',
+                      'Transmit rate: twice per second nominal',
+                      'NIC ≥ 7 for oceanic operations',
+                      'NAC ≥ 8 for position accuracy',
+                      'SDA = 2 (system design assurance)',
+                      'Quality indicators transmitted'
+                    ]
+                  }
+                },
+                {
+                  id: 'notes',
+                  name: 'Notes',
+                  iconName: 'FileText',
+                  color: 'text-purple-600',
+                  info: {
+                    notes: [
+                      'Add your notes here'
+                    ]
+                  }
+                }
+              ]
+            }
+          ]);
+
+          // Filtrar espaços aéreos pela pesquisa
+          const filteredAirspaceData = airspaceData.filter(airspace => 
+            airspace.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            airspace.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            airspace.region.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+
+          // Funções de edição
+          const startEditAirspace = (airspace) => {
+            setEditingAirspace(JSON.parse(JSON.stringify(airspace)));
+            setEditMode(true);
+          };
+
+          const cancelEdit = () => {
+            setEditingAirspace(null);
+            setEditMode(false);
+          };
+
+          const saveAirspace = () => {
+            if (editingAirspace) {
+              const updatedAirspace = {
+                ...editingAirspace,
+                lastModified: new Date().toISOString()
+              };
+              setAirspaceData(prev => 
+                prev.map(a => a.id === updatedAirspace.id ? updatedAirspace : a)
+              );
+              setEditingAirspace(null);
+              setEditMode(false);
+            }
+          };
+
+          const deleteAirspace = (airspaceId) => {
+            const airspace = airspaceData.find(a => a.id === airspaceId);
+            setAirspaceToDelete(airspace);
+            setShowDeleteModal(true);
+          };
+
+          const confirmDelete = () => {
+            if (airspaceToDelete) {
+              setAirspaceData(prev => prev.filter(a => a.id !== airspaceToDelete.id));
+              setShowDeleteModal(false);
+              setAirspaceToDelete(null);
+            }
+          };
+
+          const cancelDelete = () => {
+            setShowDeleteModal(false);
+            setAirspaceToDelete(null);
+          };
+
+          const updateEditingField = (field, value) => {
+            setEditingAirspace(prev => ({
+              ...prev,
+              [field]: value
+            }));
+          };
+
+          const updateCategoryInfo = (categoryId, section, index, value) => {
+            setEditingAirspace(prev => {
+              const newCategories = [...prev.categories];
+              const categoryIndex = newCategories.findIndex(c => c.id === categoryId);
+              
+              if (categoryIndex !== -1) {
+                const category = { ...newCategories[categoryIndex] };
+                const info = { ...category.info };
+                
+                if (Array.isArray(info[section])) {
+                  const newArray = [...info[section]];
+                  newArray[index] = value;
+                  info[section] = newArray;
+                }
+                
+                category.info = info;
+                newCategories[categoryIndex] = category;
+              }
+              
+              return {
+                ...prev,
+                categories: newCategories
+              };
+            });
+          };
+
+          const addItemToCategory = (categoryId, section) => {
+            setEditingAirspace(prev => {
+              const newCategories = [...prev.categories];
+              const categoryIndex = newCategories.findIndex(c => c.id === categoryId);
+              
+              if (categoryIndex !== -1) {
+                const category = { ...newCategories[categoryIndex] };
+                const info = { ...category.info };
+                
+                if (Array.isArray(info[section])) {
+                  info[section] = [...info[section], 'New item'];
+                }
+                
+                category.info = info;
+                newCategories[categoryIndex] = category;
+              }
+              
+              return {
+                ...prev,
+                categories: newCategories
+              };
+            });
+          };
+
+          const removeItemFromCategory = (categoryId, section, index) => {
+            setEditingAirspace(prev => {
+              const newCategories = [...prev.categories];
+              const categoryIndex = newCategories.findIndex(c => c.id === categoryId);
+              
+              if (categoryIndex !== -1) {
+                const category = { ...newCategories[categoryIndex] };
+                const info = { ...category.info };
+                
+                if (Array.isArray(info[section])) {
+                  info[section] = info[section].filter((_, i) => i !== index);
+                }
+                
+                category.info = info;
+                newCategories[categoryIndex] = category;
+              }
+              
+              return {
+                ...prev,
+                categories: newCategories
+              };
+            });
+          };
+
+          const addNewAirspace = () => {
+            const newAirspace = {
+              id: `airspace-${Date.now()}`,
+              name: 'New Airspace',
+              region: 'Region',
+              lastModified: new Date().toISOString(),
+              categories: [
+                {
+                  id: 'weather-deviation',
+                  name: 'Weather Deviation Procedure',
+                  iconName: 'AlertTriangle',
+                  color: 'text-amber-600',
+                  info: {
+                    withCommunication: ['New procedure'],
+                    withoutCommunication: ['New procedure']
+                  }
+                },
+                {
+                  id: 'contingencies',
+                  name: 'Contingency Procedures',
+                  iconName: 'AlertTriangle',
+                  color: 'text-red-600',
+                  info: {
+                    ableMaintainLevel: ['New procedure'],
+                    notAbleMaintainLevel: ['New procedure']
+                  }
+                },
+                {
+                  id: 'rnp-required',
+                  name: 'RNP Required',
+                  iconName: 'Navigation',
+                  color: 'text-blue-600',
+                  info: {
+                    requirements: ['New requirement'],
+                    procedures: ['New procedure']
+                  }
+                },
+                {
+                  id: 'ads-b',
+                  name: 'ADS-B Requirements',
+                  iconName: 'Radar',
+                  color: 'text-green-600',
+                  info: {
+                    requirements: ['New requirement'],
+                    specifications: ['New specification']
+                  }
+                }
+              ]
+            };
+            
+            setAirspaceData(prev => [...prev, newAirspace]);
+            setShowAddModal(false);
+          };
+
+          const toggleAirspace = (airspaceId) => {
+            setExpandedAirspaces(prev => ({
+              ...prev,
+              [airspaceId]: !prev[airspaceId]
+            }));
+          };
+
+          const toggleCategory = (airspaceId, categoryId) => {
+            const key = `${airspaceId}-${categoryId}`;
+            setExpandedCategories(prev => ({
+              ...prev,
+              [key]: !prev[key]
+            }));
+          };
+
+          // Função para formatar a data
+          const formatDate = (isoString) => {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          };
+
+          const renderInfoSection = (title, items) => (
+            <div className="mb-4">
+              <h5 className="font-semibold text-gray-700 mb-2 text-sm">{title}</h5>
+              <ul className="space-y-1">
+                {items.map((item, idx) => (
+                  <li key={idx} className="text-sm text-gray-600 flex items-start">
+                    <span className="mr-2 text-blue-500 mt-1">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+              <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Plane className="text-blue-600" size={32} />
+                    <h1 className="text-3xl font-bold text-gray-800">
+                      Airspace Information System
+                    </h1>
+                  </div>
+                  <p className="text-gray-600 mb-4">
+                    Procedures and Requirements Information by Airspace
+                  </p>
+
+                  {/* Search and Controls */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-center">
+                    {/* Search Bar */}
+                    <div className="relative flex-1 w-full">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                      <input
+                        type="text"
+                        placeholder="Search by FIR, name or region..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          <X size={18} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Add Button */}
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
+                    >
+                      <Plus size={20} />
+                      <span>Add FIR</span>
+                    </button>
+                  </div>
+
+                  {/* Search Results Info */}
+                  {searchTerm && (
+                    <div className="mt-3 text-sm text-gray-600">
+                      {filteredAirspaceData.length} result(s) found for "{searchTerm}"
+                    </div>
+                  )}
+                </div>
+
+                {/* Airspace Tables */}
+                <div className="space-y-4">
+                  {filteredAirspaceData.map((airspace) => (
+                    <div key={airspace.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                      {/* Airspace Header */}
+                      <div className="flex items-center border-b border-gray-200">
+                        <button
+                          onClick={() => toggleAirspace(airspace.id)}
+                          className="flex-1 px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            {expandedAirspaces[airspace.id] ? (
+                              <ChevronDown className="text-gray-600" size={24} />
+                            ) : (
+                              <ChevronRight className="text-gray-600" size={24} />
+                            )}
+                            <Radio className="text-blue-600" size={24} />
+                            <div className="text-left">
+                              <h2 className="text-xl font-bold text-gray-800">
+                                {airspace.name}
+                              </h2>
+                              <p className="text-sm text-gray-500">{airspace.region}</p>
+                              {airspace.lastModified && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Last modified: {formatDate(airspace.lastModified)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-sm text-gray-500 font-medium">
+                            {airspace.categories.length} categories
+                          </span>
+                        </button>
+
+                        {/* Edit and Delete Buttons */}
+                        <div className="flex gap-2 px-4 border-l border-gray-200">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditAirspace(airspace);
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 size={20} />
+                          </button>
+                          {airspace.id !== 'doc4444-contingency' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteAirspace(airspace.id);
+                              }}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={20} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Categories */}
+                      {expandedAirspaces[airspace.id] && (
+                        <div className="border-t border-gray-200">
+                          {/* Image Display for DOC4444 */}
+                          {airspace.image && (
+                            <div className="p-6 bg-gray-50">
+                              <img 
+                                src={airspace.image} 
+                                alt={airspace.name}
+                                className="w-full h-auto rounded-lg shadow-lg"
+                              />
+                            </div>
+                          )}
+                          
+                          {airspace.categories.map((category) => {
+                            const IconComponent = getIconComponent(category.iconName);
+                            const isExpanded = expandedCategories[`${airspace.id}-${category.id}`];
+                            
+                            return (
+                              <div key={category.id} className="border-b border-gray-100 last:border-b-0">
+                                {/* Category Header */}
+                                <button
+                                  onClick={() => toggleCategory(airspace.id, category.id)}
+                                  className="w-full px-8 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {isExpanded ? (
+                                      <ChevronDown className="text-gray-400" size={20} />
+                                    ) : (
+                                      <ChevronRight className="text-gray-400" size={20} />
+                                    )}
+                                    <IconComponent className={category.color} size={20} />
+                                    <span className="font-semibold text-gray-700">
+                                      {category.name}
+                                    </span>
+                                  </div>
+                                </button>
+
+                                {/* Category Content */}
+                                {isExpanded && (
+                                  <div className="px-8 pb-6 bg-gray-50">
+                                    {/* Weather Deviation */}
+                                    {category.id === 'weather-deviation' && (
+                                      <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('With Communication', category.info.withCommunication)}
+                                        </div>
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('Without Communication', category.info.withoutCommunication)}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Contingencies */}
+                                    {category.id === 'contingencies' && (
+                                      <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('Able to Maintain Level', category.info.ableMaintainLevel)}
+                                        </div>
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('Not Able to Maintain Level', category.info.notAbleMaintainLevel)}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* RNP Required */}
+                                    {category.id === 'rnp-required' && (
+                                      <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('Requirements', category.info.requirements)}
+                                        </div>
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('Procedures', category.info.procedures)}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* ADS-B */}
+                                    {category.id === 'ads-b' && (
+                                      <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('Requirements', category.info.requirements)}
+                                        </div>
+                                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                                          {renderInfoSection('Specifications', category.info.specifications)}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Notes */}
+                                    {category.id === 'notes' && category.info.notes && (
+                                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                                        {renderInfoSection('Notes', category.info.notes)}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add Modal */}
+                {showAddModal && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+                      <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                        Add New Airspace
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        A new airspace will be created with default values. You can edit it later.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={addNewAirspace}
+                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Create
+                        </button>
+                        <button
+                          onClick={() => setShowAddModal(false)}
+                          className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit Modal - Full Version */}
+                {editMode && editingAirspace && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+                    <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full my-8">
+                      <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
+                        <h3 className="text-2xl font-bold text-gray-800">
+                          Edit Airspace
+                        </h3>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={saveAirspace}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            <Save size={20} />
+                            <span>Save</span>
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                          >
+                            <X size={20} />
+                            <span>Cancel</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-6 max-h-[70vh] overflow-y-auto">
+                        {/* Basic Information */}
+                        <div className="mb-6">
+                          <h4 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h4>
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                FIR Name
+                              </label>
+                              <input
+                                type="text"
+                                value={editingAirspace.name}
+                                onChange={(e) => updateEditingField('name', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Region
+                              </label>
+                              <input
+                                type="text"
+                                value={editingAirspace.region}
+                                onChange={(e) => updateEditingField('region', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Categories */}
+                        <div className="space-y-6">
+                          {editingAirspace.categories.map((category) => {
+                            const IconComponent = getIconComponent(category.iconName);
+                            
+                            return (
+                              <div key={category.id} className="border border-gray-200 rounded-lg p-4">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                  <IconComponent size={20} className={category.color} />
+                                  {category.name}
+                                </h4>
+
+                                {/* Weather Deviation */}
+                                {category.id === 'weather-deviation' && category.info.withCommunication && category.info.withoutCommunication && (
+                                  <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          With Communication
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'withCommunication')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.withCommunication.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'withCommunication', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'withCommunication', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Without Communication
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'withoutCommunication')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.withoutCommunication.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'withoutCommunication', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'withoutCommunication', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Contingencies */}
+                                {category.id === 'contingencies' && category.info.ableMaintainLevel && category.info.notAbleMaintainLevel && (
+                                  <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Able to Maintain Level
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'ableMaintainLevel')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.ableMaintainLevel.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'ableMaintainLevel', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'ableMaintainLevel', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Not Able to Maintain Level
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'notAbleMaintainLevel')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.notAbleMaintainLevel.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'notAbleMaintainLevel', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'notAbleMaintainLevel', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* RNP Required */}
+                                {category.id === 'rnp-required' && category.info.requirements && category.info.procedures && (
+                                  <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Requirements
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'requirements')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.requirements.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'requirements', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'requirements', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Procedures
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'procedures')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.procedures.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'procedures', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'procedures', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* ADS-B */}
+                                {category.id === 'ads-b' && category.info.requirements && category.info.specifications && (
+                                  <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Requirements
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'requirements')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.requirements.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'requirements', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'requirements', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                          Specifications
+                                        </label>
+                                        <button
+                                          onClick={() => addItemToCategory(category.id, 'specifications')}
+                                          className="text-blue-600 hover:text-blue-700"
+                                          type="button"
+                                        >
+                                          <Plus size={18} />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {category.info.specifications.map((item, idx) => (
+                                          <div key={idx} className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={item}
+                                              onChange={(e) => updateCategoryInfo(category.id, 'specifications', idx, e.target.value)}
+                                              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                              onClick={() => removeItemFromCategory(category.id, 'specifications', idx)}
+                                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                              type="button"
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Notes */}
+                                {category.id === 'notes' && category.info.notes && (
+                                  <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                      <label className="text-sm font-medium text-gray-700">
+                                        Notes
+                                      </label>
+                                      <button
+                                        onClick={() => addItemToCategory(category.id, 'notes')}
+                                        className="text-blue-600 hover:text-blue-700"
+                                        type="button"
+                                      >
+                                        <Plus size={18} />
+                                      </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                      {category.info.notes.map((item, idx) => (
+                                        <div key={idx} className="flex gap-2">
+                                          <textarea
+                                            value={item}
+                                            onChange={(e) => updateCategoryInfo(category.id, 'notes', idx, e.target.value)}
+                                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            rows="3"
+                                          />
+                                          <button
+                                            onClick={() => removeItemFromCategory(category.id, 'notes', idx)}
+                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                            type="button"
+                                          >
+                                            <Trash2 size={16} />
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {showDeleteModal && airspaceToDelete && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-3 bg-red-100 rounded-full">
+                          <AlertTriangle className="text-red-600" size={24} />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-800">
+                          Confirm Deletion
+                        </h3>
+                      </div>
+                      <p className="text-gray-600 mb-2">
+                        Are you sure you want to delete this airspace:
+                      </p>
+                      <p className="text-lg font-semibold text-gray-800 mb-6">
+                        {airspaceToDelete.name}
+                      </p>
+                      <p className="text-sm text-gray-500 mb-6">
+                        This action cannot be undone.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={confirmDelete}
+                          className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                        >
+                          Yes, Delete
+                        </button>
+                        <button
+                          onClick={cancelDelete}
+                          className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+
+              </div>
+            </div>
+          );
+        };
+
+        // Renderizar o componente
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AirspaceInfoApp />);
+    </script>
+</body>
+</html>
