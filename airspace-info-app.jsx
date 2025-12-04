@@ -23,7 +23,17 @@ const AirspaceInfoApp = () => {
   };
 
   // Dados de exemplo dos espaços aéreos
-  const [airspaceData, setAirspaceData] = useState([
+  const getInitialData = () => {
+    const savedData = localStorage.getItem('airspaceData');
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (e) {
+        console.error('Error loading saved data:', e);
+      }
+    }
+    // Dados padrão se não houver salvos
+    return [
     {
       id: 'doc4444-contingency',
       name: 'DOC4444 Contingency Procedures',
@@ -435,6 +445,21 @@ const AirspaceInfoApp = () => {
       ]
     }
   ]);
+
+  const [airspaceData, setAirspaceData] = useState(getInitialData());
+
+  // Salvar no localStorage sempre que os dados mudarem
+  React.useEffect(() => {
+    localStorage.setItem('airspaceData', JSON.stringify(airspaceData));
+  }, [airspaceData]);
+
+  // Função para resetar dados para o padrão
+  const resetToDefault = () => {
+    if (window.confirm('Are you sure you want to reset all data to default? This cannot be undone.')) {
+      localStorage.removeItem('airspaceData');
+      window.location.reload();
+    }
+  };
 
   // Filtrar espaços aéreos pela pesquisa
   const filteredAirspaceData = airspaceData.filter(airspace => 
